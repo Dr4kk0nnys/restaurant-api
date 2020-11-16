@@ -1,9 +1,9 @@
 from rest_framework import serializers
 
-from api.models import RestaurantRegister
+from api.models import Restaurant
 
 
-class RestaurantRegisterSerializer(serializers.HyperlinkedModelSerializer):
+class RestaurantSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
-        model = RestaurantRegister
+        model = Restaurant
         fields = '__all__'

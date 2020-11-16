@@ -1,7 +1,7 @@
 from django.db import models
 
 
-class RestaurantRegister(models.Model):
+class Restaurant(models.Model):
     """
     To register a restaurant the model will require some information, such as:
 
