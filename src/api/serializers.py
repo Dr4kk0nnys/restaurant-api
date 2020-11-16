@@ -6,4 +6,4 @@ from api.models import Restaurant
 class RestaurantSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = Restaurant
-        fields = '__all__'
+        fields = ['id', 'restaurant_name', 'owner_name', 'address', 'phone_number']
