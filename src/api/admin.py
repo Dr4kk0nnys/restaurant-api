@@ -15,7 +15,7 @@ class DishesInline(admin.StackedInline):
 
 
 class RestaurantAdmin(admin.ModelAdmin):
-    fields = ['restaurant_name', 'owner_name', 'address', 'phone_number']
+    fields = ['restaurant_name', 'owner_name', 'address', 'phone_number', 'token_id']
     inlines = [DishesInline]
 
 

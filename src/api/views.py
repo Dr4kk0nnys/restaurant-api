@@ -1,3 +1,5 @@
+from django.core.exceptions import ObjectDoesNotExist
+
 from rest_framework import viewsets
 from rest_framework.response import Response
 
@@ -36,7 +38,7 @@ class RestaurantViewset(viewsets.ViewSet):
             return Response({'Created': 'false'})
 
         # unpacking data
-        [restaurant_name, owner_name, address, phone_number] = serializer.data.values()
+        [restaurant_name, owner_name, address, phone_number, token_id] = serializer.data.values()
 
         # The restaurant name already exists.
         if Restaurant.objects.filter(restaurant_name=restaurant_name):
@@ -46,22 +48,31 @@ class RestaurantViewset(viewsets.ViewSet):
             restaurant_name=restaurant_name,
             owner_name=owner_name,
             address=address,
-            phone_number=phone_number
+            phone_number=phone_number,
+            token_id=token_id
         )
 
         return Response({'Created': 'true'})
 
+    # TODO: You need some credentials to update the info ( token id ) ?
     def put(self, request, format=None, pk=None):
         serializer = RestaurantSerializer(data=request.data)
 
         if not serializer.is_valid():
             return Response({'Created': 'false'})
 
-        [restaurant_name, owner_name, address, phone_number] = serializer.data.values()
+        [restaurant_name, owner_name, address, phone_number, token_id] = serializer.data.values()
 
-        # TODO: Check if the restaurant exists first
-        restaurant = Restaurant.objects.select_for_update().get(restaurant_name=restaurant_name)
-        restaurant.restaurant_name = 'Updated'
+        try:
+            restaurant = Restaurant.objects.select_for_update().get(token_id=token_id)
+        except Restaurant.DoesNotExist:
+            return Response({'Created': 'false'})
+        
+        restaurant.restaurant_name = restaurant_name
+        restaurant.owner_name = owner_name
+        restaurant.address = address
+        restaurant.phone_number = phone_number
+        
         restaurant.save()
 
         return Response({'Created': 'true'})

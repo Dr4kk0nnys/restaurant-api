@@ -11,6 +11,7 @@ class Restaurant(models.Model):
     owner_name = models.CharField(max_length=100)
     address = models.CharField(max_length=200)
     phone_number = models.CharField(max_length=30)
+    token_id = models.CharField(max_length=256)
 
     objects = models.Manager()
 
