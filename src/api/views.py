@@ -1,5 +1,5 @@
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import JsonResponse
+from django.core.validators import MinValueValidator
 
 from rest_framework import viewsets
 from rest_framework.response import Response
@@ -20,17 +20,18 @@ class IndexViewset(viewsets.ViewSet):
 
 class RestaurantViewset(viewsets.ViewSet):
     """
-    The restaurant view set may update, create or delete a restaurant.
+    The RestaurantViewSet may list, create, update and delete info.
 
-    create: Checks if there is already a restaurant with the name. If it doesn't, it creates a new restaurant.
+    list: Return the account information being guided by the token id.
 
-    update: Checks if there is a restaurant with the info, if it does, updates the info of it.
+    create: Creates a brand new account.
 
-    delete: Checks if there is a restaurant with the info, if it does, it gets deleted.
+    update: Update all the info of a certain account being guided by the token id.
+
+    delete: Delete a certain account being guided by the token id.
     """
     # TODO: Custom validation to the serializer fields ( such as, is the address correctly sended ? )
     # TODO: Create a function to validate the info received in the request
-    # TODO: Create a function to get the default values ( restaurant name, owner name, etc ... )
 
     def get_serializer_and_is_valid(self, data):
         serializer = RestaurantSerializer(data=data)
@@ -42,8 +43,6 @@ class RestaurantViewset(viewsets.ViewSet):
     # TODO: Implement the validation to the values received
     def validate_info(self, values):
         pass
-
-    # def simple_validation(self):
 
     def list(self, request):
         (serializer, is_valid) = self.get_serializer_and_is_valid(request.data)
