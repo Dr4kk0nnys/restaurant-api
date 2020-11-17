@@ -39,6 +39,10 @@ class RestaurantViewset(viewsets.ViewSet):
             return (serializer, False)
         return (serializer, True)
 
+    # TODO: Implement the validation to the values received
+    def validate_info(self, values):
+        pass
+
     # def simple_validation(self):
 
     def list(self, request):
@@ -71,28 +75,22 @@ class RestaurantViewset(viewsets.ViewSet):
 
         return Response({'Created': 'true'})
 
-    # # TODO: You need some credentials to update the info ( token id ) ?
-    # def put(self, request, format=None, pk=None):
-    #     serializer = RestaurantSerializer(data=request.data)
+    def put(self, request, format=None, pk=None):
+        (serializer, is_valid) = self.get_serializer_and_is_valid(request.data)
+        if not is_valid:
+            return Response({'Serializer not valid': 'true'})
 
-    #     if not serializer.is_valid():
-    #         return Response({'Created': 'false'})
+        [restaurant_name, owner_name, address, phone_number, token_id] = serializer.data.values()
 
-    #     [restaurant_name, owner_name, address, phone_number, token_id] = serializer.data.values()
-
-    #     try:
-    #         restaurant = Restaurant.objects.select_for_update().get(token_id=token_id)
-    #     except Restaurant.DoesNotExist:
-    #         return Response({'Created': 'false'})
+        # TODO: Validate the info ( it will check if the token id exists, etc ... )
         
-    #     restaurant.restaurant_name = restaurant_name
-    #     restaurant.owner_name = owner_name
-    #     restaurant.address = address
-    #     restaurant.phone_number = phone_number
-        
-    #     restaurant.save()
-
-    #     return Response({'Created': 'true'})
+        Restaurant.objects.select_for_update().filter(token_id=token_id).update(
+            restaurant_name=restaurant_name,
+            owner_name=owner_name,
+            address=address,
+            phone_number=phone_number
+        )
+        return Response({'Created': 'true'})
 
     # def delete(self, request, format=None, pk=None):
     #     serializer = RestaurantSerializer(data=request.data)
