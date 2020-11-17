@@ -4,6 +4,16 @@
 
 # Register
 
+## Restaurants
+
+## Clients
+
+# Update
+
+## Restaurants
+
+## Clients
+
 # Rate Limit
 
 # Requests

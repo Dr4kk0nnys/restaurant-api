@@ -76,3 +76,18 @@ class RestaurantViewset(viewsets.ViewSet):
         restaurant.save()
 
         return Response({'Created': 'true'})
+
+    def delete(self, request, format=None, pk=None):
+        serializer = RestaurantSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response({'Created': 'false'})
+        
+        [restaurant_name, owner_name, address, phone_number, token_id] = serializer.data.values()
+
+        try:
+            restaurant = Restaurant.objects.get(token_id=token_id).delete()
+        except Restaurant.DoesNotExist:
+            return Response({'Created': 'false'})
+
+        return Response({'Created': 'false'})
