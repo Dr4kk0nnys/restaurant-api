@@ -27,6 +27,7 @@ class RestaurantViewset(viewsets.ViewSet):
     """
     # TODO: Custom validation to the serializer fields ( such as, is the address correctly sended ? )
     # TODO: Create a function to validate the info received in the request
+    # TODO: Create a function to get the default values ( restaurant name, owner name, etc ... )
 
     def create(self, request, format=None, pk=None):
         serializer = RestaurantSerializer(data=request.data)
@@ -34,8 +35,33 @@ class RestaurantViewset(viewsets.ViewSet):
         if not serializer.is_valid():
             return Response({'Created': 'false'})
 
+        # unpacking data
+        [restaurant_name, owner_name, address, phone_number] = serializer.data.values()
+
         # The restaurant name already exists.
-        if Restaurant.objects.filter(restaurant_name=serializer.data['restaurant_name']):
+        if Restaurant.objects.filter(restaurant_name=restaurant_name):
             return Response({'Created': 'false'})
+        
+        Restaurant.objects.get_or_create(
+            restaurant_name=restaurant_name,
+            owner_name=owner_name,
+            address=address,
+            phone_number=phone_number
+        )
+
+        return Response({'Created': 'true'})
+
+    def put(self, request, format=None, pk=None):
+        serializer = RestaurantSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response({'Created': 'false'})
+
+        [restaurant_name, owner_name, address, phone_number] = serializer.data.values()
+
+        # TODO: Check if the restaurant exists first
+        restaurant = Restaurant.objects.select_for_update().get(restaurant_name=restaurant_name)
+        restaurant.restaurant_name = 'Updated'
+        restaurant.save()
 
         return Response({'Created': 'true'})
