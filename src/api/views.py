@@ -49,26 +49,24 @@ class RestaurantViewset(viewsets.ViewSet):
         return Response(Restaurant.objects.filter(token_id=serializer.data['token_id']).values())
 
     def create(self, request, format=None, pk=None):
-        serializer = RestaurantSerializer(data=request.data)
+        (serializer, is_valid) = self.get_serializer_and_is_valid(request.data)
+        if not is_valid:
+            return Response({'Serializer not valid': 'true'})
 
-        if not self.serializer.is_valid():
-            return Response({'Created': 'false'})
-        
-        return Response({'foo': 'bar'})
-
-        # unpacking data
-        [restaurant_name, owner_name, address, phone_number, token_id] = self.serializer.data.values()
+        # TODO: While registering the restaurant the user won't have a token id yet, so this field can be None ( explain in the documentation )
+        [restaurant_name, owner_name, address, phone_number, token_id] = serializer.data.values()
 
         # The restaurant name already exists.
         if Restaurant.objects.filter(restaurant_name=restaurant_name):
-            return Response({'Created': 'false'})
+            return Response({'Already Created': 'True'})
         
+        # TODO: Create the generate_token_id() function
         Restaurant.objects.get_or_create(
             restaurant_name=restaurant_name,
             owner_name=owner_name,
             address=address,
             phone_number=phone_number,
-            token_id=token_id
+            token_id='fhdsakjfhsakjfhaksjdfhasdkfjhasjdfhasjkfdhasjhfsdkjfhasjfhasdjkfhag3yughfsdjkfhasjdhfaklsjdfhajksfdh'
         )
 
         return Response({'Created': 'true'})
