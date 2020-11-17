@@ -4,6 +4,8 @@ from django.core.validators import MinValueValidator
 from rest_framework import viewsets
 from rest_framework.response import Response
 
+from api.utils.credentials import generate_token, generate_hash
+
 from api.models import Restaurant
 
 from api.serializers import RestaurantSerializer
@@ -42,8 +44,20 @@ class RestaurantViewset(viewsets.ViewSet):
 
     def get_serialized_data(self, data):
         try:
-            [restaurant_name, owner_name, address, phone_number] = data.values()
-            return [restaurant_name, owner_name, address, phone_number]
+            info = []
+
+            """
+            data.values() should look like this:
+                [0]: email
+                [1]: password
+                [2]: restaurant name
+                [3]: owner name
+                [4]: address
+                [5]: phone number
+            """
+            for value in data.values():
+                info.append(value)
+            return info
         except:
             return None
 
@@ -63,7 +77,7 @@ class RestaurantViewset(viewsets.ViewSet):
         if not is_valid:
             return Response({'Serializer not valid': 'true'})
 
-        # Get serialized data returns None if an error occurs while trying to unpack the data.
+        # get_serialized_data() returns None if an error occurs while trying to unpack the data.
         data = self.get_serialized_data(serializer.data)
         if not data:
             return Response({'Error occurred trying to get data': 'true'})
@@ -71,36 +85,40 @@ class RestaurantViewset(viewsets.ViewSet):
         # The restaurant name already exists.
         if Restaurant.objects.filter(restaurant_name=data[0]):
             return Response({'Already Created': 'True'})
-        
-        # TODO: Create the generate_token_id() function
-        Restaurant.objects.get_or_create(
-            restaurant_name=data[0],
-            owner_name=data[1],
-            address=data[2],
-            phone_number=data[3],
-            token_id='fhdsakjfhsakjfhaksjdfhasdkfjhasjdfhasjkfdhasjhfsdkjfhasjfhasdjkfhag3yughfsdjkfhasjdhfaklsjdfhajksfdh'
+
+        test = Restaurant.objects.get_or_create(
+            email=data[0],
+            password=generate_hash(data[1]),
+            restaurant_name=data[2],
+            owner_name=data[3],
+            address=data[4],
+            phone_number=data[5],
+            token_id=generate_token(data[0], data[1])
         )
 
-        return Response({'Created': 'true'})
+        return Response(data)
 
     def put(self, request):
         (serializer, is_valid) = self.get_serializer_and_is_valid(request.data)
         if not is_valid:
             return Response({'Serializer not valid': 'true'})
 
-        # Get serialized data returns None if an error occurs while trying to unpack the data.
+        # get_serialized_data() returns None if an error occurs while trying to unpack the data.
         data = self.get_serialized_data(serializer.data)
         if not data:
             return Response({'Error occurred trying to get data': 'true'})
 
         # TODO: Validate the info ( it will check if the token id exists, etc ... )
         Restaurant.objects.select_for_update().filter(token_id=serializer.data['token_id']).update(
-            restaurant_name=data[0],
-            owner_name=data[1],
-            address=data[2],
-            phone_number=data[3]
+            email=data[0],
+            password=generate_hash(data[1]),
+            restaurant_name=data[2],
+            owner_name=data[3],
+            address=data[4],
+            phone_number=data[5],
+            token_id=generate_token(data[0], data[1])
         )
-        return Response({'Created': 'true'})
+        return Response({'Updated': 'true'})
 
     def delete(self, request):
         try:

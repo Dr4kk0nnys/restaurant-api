@@ -7,11 +7,14 @@ class Restaurant(models.Model):
 
     Restaurant name, Address, Phone number, Owner's name
     """
+    email = models.EmailField()
+    password = models.CharField(max_length=256)
+    token_id = models.CharField(max_length=256, default='No token id provided.')
+
     restaurant_name = models.CharField(max_length=200)
     owner_name = models.CharField(max_length=100)
     address = models.CharField(max_length=200)
     phone_number = models.CharField(max_length=30)
-    token_id = models.CharField(max_length=256, default='No token id provided.')
 
     objects = models.Manager()
 
