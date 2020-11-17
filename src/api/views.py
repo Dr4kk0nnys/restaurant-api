@@ -1,4 +1,5 @@
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.validators import MinValueValidator
 
 from rest_framework import viewsets
 from rest_framework.response import Response
@@ -19,75 +20,98 @@ class IndexViewset(viewsets.ViewSet):
 
 class RestaurantViewset(viewsets.ViewSet):
     """
-    The restaurant view set may update, create or delete a restaurant.
+    The RestaurantViewSet may list, create, update and delete info.
 
-    create: Checks if there is already a restaurant with the name. If it doesn't, it creates a new restaurant.
+    list: Return the account information being guided by the token id.
 
-    update: Checks if there is a restaurant with the info, if it does, updates the info of it.
+    create: Creates a brand new account.
 
-    delete: Checks if there is a restaurant with the info, if it does, it gets deleted.
+    update: Update all the info of a certain account being guided by the token id.
+
+    delete: Delete a certain account being guided by the token id.
     """
     # TODO: Custom validation to the serializer fields ( such as, is the address correctly sended ? )
     # TODO: Create a function to validate the info received in the request
-    # TODO: Create a function to get the default values ( restaurant name, owner name, etc ... )
 
-    def create(self, request, format=None, pk=None):
-        serializer = RestaurantSerializer(data=request.data)
+    def get_serializer_and_is_valid(self, data):
+        serializer = RestaurantSerializer(data=data)
 
         if not serializer.is_valid():
-            return Response({'Created': 'false'})
+            return (serializer, False)
+        return (serializer, True)
 
-        # unpacking data
-        [restaurant_name, owner_name, address, phone_number, token_id] = serializer.data.values()
+    def get_serialized_data(self, data):
+        try:
+            [restaurant_name, owner_name, address, phone_number] = data.values()
+            return [restaurant_name, owner_name, address, phone_number]
+        except:
+            return None
+
+    # TODO: Implement the validation to the values received
+    def validate_info(self, values):
+        pass
+
+    def list(self, request):
+        (serializer, is_valid) = self.get_serializer_and_is_valid(request.data)
+        if not is_valid:
+            return Response({'Serializer not valid': 'true'})
+
+        return Response(Restaurant.objects.filter(token_id=serializer.data['token_id']).values())
+
+    def create(self, request):
+        (serializer, is_valid) = self.get_serializer_and_is_valid(request.data)
+        if not is_valid:
+            return Response({'Serializer not valid': 'true'})
+
+        # Get serialized data returns None if an error occurs while trying to unpack the data.
+        data = self.get_serialized_data(serializer.data)
+        if not data:
+            return Response({'Error occurred trying to get data': 'true'})
 
         # The restaurant name already exists.
-        if Restaurant.objects.filter(restaurant_name=restaurant_name):
-            return Response({'Created': 'false'})
+        if Restaurant.objects.filter(restaurant_name=data[0]):
+            return Response({'Already Created': 'True'})
         
+        # TODO: Create the generate_token_id() function
         Restaurant.objects.get_or_create(
-            restaurant_name=restaurant_name,
-            owner_name=owner_name,
-            address=address,
-            phone_number=phone_number,
-            token_id=token_id
+            restaurant_name=data[0],
+            owner_name=data[1],
+            address=data[2],
+            phone_number=data[3],
+            token_id='fhdsakjfhsakjfhaksjdfhasdkfjhasjdfhasjkfdhasjhfsdkjfhasjfhasdjkfhag3yughfsdjkfhasjdhfaklsjdfhajksfdh'
         )
 
         return Response({'Created': 'true'})
 
-    # TODO: You need some credentials to update the info ( token id ) ?
-    def put(self, request, format=None, pk=None):
-        serializer = RestaurantSerializer(data=request.data)
+    def put(self, request):
+        (serializer, is_valid) = self.get_serializer_and_is_valid(request.data)
+        if not is_valid:
+            return Response({'Serializer not valid': 'true'})
 
-        if not serializer.is_valid():
-            return Response({'Created': 'false'})
+        # Get serialized data returns None if an error occurs while trying to unpack the data.
+        data = self.get_serialized_data(serializer.data)
+        if not data:
+            return Response({'Error occurred trying to get data': 'true'})
 
-        [restaurant_name, owner_name, address, phone_number, token_id] = serializer.data.values()
-
-        try:
-            restaurant = Restaurant.objects.select_for_update().get(token_id=token_id)
-        except Restaurant.DoesNotExist:
-            return Response({'Created': 'false'})
-        
-        restaurant.restaurant_name = restaurant_name
-        restaurant.owner_name = owner_name
-        restaurant.address = address
-        restaurant.phone_number = phone_number
-        
-        restaurant.save()
-
+        # TODO: Validate the info ( it will check if the token id exists, etc ... )
+        Restaurant.objects.select_for_update().filter(token_id=serializer.data['token_id']).update(
+            restaurant_name=data[0],
+            owner_name=data[1],
+            address=data[2],
+            phone_number=data[3]
+        )
         return Response({'Created': 'true'})
 
-    def delete(self, request, format=None, pk=None):
-        serializer = RestaurantSerializer(data=request.data)
-
-        if not serializer.is_valid():
-            return Response({'Created': 'false'})
-        
-        [restaurant_name, owner_name, address, phone_number, token_id] = serializer.data.values()
-
+    def delete(self, request):
         try:
-            restaurant = Restaurant.objects.get(token_id=token_id).delete()
-        except Restaurant.DoesNotExist:
-            return Response({'Created': 'false'})
+            token_id = request.data['token_id']
+        except KeyError:
+            return Response({'Could not find the token id in the request body': 'true'})
 
-        return Response({'Created': 'false'})
+        # TODO: Validate the token id.
+        try:
+            Restaurant.objects.get(token_id=token_id).delete()
+        except Restaurant.DoesNotExist:
+            return Response({'Deleted': 'false'})
+
+        return Response({'Deleted': 'true'})
