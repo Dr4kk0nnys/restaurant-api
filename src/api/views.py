@@ -52,7 +52,7 @@ class RestaurantViewset(viewsets.ViewSet):
 
         return Response(Restaurant.objects.filter(token_id=serializer.data['token_id']).values())
 
-    def create(self, request, format=None, pk=None):
+    def create(self, request):
         (serializer, is_valid) = self.get_serializer_and_is_valid(request.data)
         if not is_valid:
             return Response({'Serializer not valid': 'true'})
@@ -75,7 +75,7 @@ class RestaurantViewset(viewsets.ViewSet):
 
         return Response({'Created': 'true'})
 
-    def put(self, request, format=None, pk=None):
+    def put(self, request):
         (serializer, is_valid) = self.get_serializer_and_is_valid(request.data)
         if not is_valid:
             return Response({'Serializer not valid': 'true'})
@@ -92,17 +92,16 @@ class RestaurantViewset(viewsets.ViewSet):
         )
         return Response({'Created': 'true'})
 
-    # def delete(self, request, format=None, pk=None):
-    #     serializer = RestaurantSerializer(data=request.data)
-
-    #     if not serializer.is_valid():
-    #         return Response({'Created': 'false'})
+    def delete(self, request):
+        (serializer, is_valid) = self.get_serializer_and_is_valid(request.data)
+        if not is_valid:
+            return Response({'Serializer not valid': 'true'})
         
-    #     [restaurant_name, owner_name, address, phone_number, token_id] = serializer.data.values()
+        [restaurant_name, owner_name, address, phone_number, token_id] = serializer.data.values()
 
-    #     try:
-    #         restaurant = Restaurant.objects.get(token_id=token_id).delete()
-    #     except Restaurant.DoesNotExist:
-    #         return Response({'Created': 'false'})
+        try:
+            Restaurant.objects.get(token_id=token_id).delete()
+        except Restaurant.DoesNotExist:
+            return Response({'Deleted': 'false'})
 
-    #     return Response({'Created': 'false'})
+        return Response({'Deleted': 'true'})
