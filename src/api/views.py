@@ -12,6 +12,7 @@ from api.serializers import RestaurantSerializer
 
 
 # TODO: Standardize the return of the Responses
+# TODO: Create some more organized files on the root directory
 
 
 class IndexViewset(viewsets.ViewSet):
@@ -47,7 +48,7 @@ class RestaurantViewset(viewsets.ViewSet):
             info = []
 
             """
-            data.values() should look like this:
+            data.values() looks like this:
                 [0]: email
                 [1]: password
                 [2]: restaurant name
