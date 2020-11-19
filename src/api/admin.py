@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from api.models import Restaurant, Dishes
+from api.models import Restaurant, Dishes, Client
 
 
 """
@@ -19,4 +19,9 @@ class RestaurantAdmin(admin.ModelAdmin):
     inlines = [DishesInline]
 
 
+class ClientAdmin(admin.ModelAdmin):
+    fields = ['email', 'password', 'name', 'address', 'token_id']
+
+
 admin.site.register(Restaurant, RestaurantAdmin)
+admin.site.register(Client, ClientAdmin)

@@ -5,11 +5,10 @@ from django.db.models import Q
 from rest_framework import viewsets
 from rest_framework.response import Response
 
+from api.models import Restaurant, Client
+from api.serializers import RestaurantSerializer, ClientSerializer
+
 from api.utils.credentials import generate_token, generate_hash
-
-from api.models import Restaurant
-
-from api.serializers import RestaurantSerializer
 
 
 # TODO: Standardize the return of the Responses
@@ -136,3 +135,34 @@ class RestaurantViewset(viewsets.ViewSet):
             return Response({'Deleted': 'false'})
 
         return Response({'Deleted': 'true'})
+
+
+class ClientViewset(viewsets.ViewSet):
+    """
+    The client viewset may list, create, update or delete a client.
+
+    list: List the client information being guided by the token id.
+    """
+    def list(self, request):
+        try:
+            client = Client.objects.get(token_id=request.data['token_id']).values()
+        except KeyError:
+            return Response({'Error trying to get the token id': 'true'})
+        
+        return Response({'success': 'true', 'data': client, 'error': {}})
+
+    def create(self, request):
+        serializer = ClientSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response({'The serializer is not valid': 'true'})
+
+        Client.objects.get_or_create(
+            email=serializer.data['email'],
+            password=generate_hash(serializer.data['password']),
+            name=serializer.data['name'],
+            address=serializer.data['address'],
+            token_id=generate_token(serializer.data['email'], serializer.data['password'])
+        )
+
+        return Response(serializer.data)
