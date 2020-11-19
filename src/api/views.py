@@ -142,6 +142,10 @@ class ClientViewset(viewsets.ViewSet):
     The client viewset may list, create, update or delete a client.
 
     list: List the client information being guided by the token id.
+
+    create: Creates a new client with all the info.
+
+
     """
     def list(self, request):
         try:
@@ -166,3 +170,27 @@ class ClientViewset(viewsets.ViewSet):
         )
 
         return Response(serializer.data)
+
+    def update(self, request):
+        serializer = ClientSerializer(data=request.data)
+
+        if not serializer.is_valid():
+            return Response({'The serializer is not valid': 'true'})
+        
+        Client.objects.select_for_update().filter(token_id=serializer.data['token_id']).update(
+            email=serializer.data['email'],
+            password=generate_hash(serializer.data['password']),
+            name=serializer.data['name'],
+            address=serializer.data['address'],
+            token_id=generate_token(serializer.data['email'], serializer.data['password'])
+        )
+
+        return Response(serializer.data)
+    
+    def delete(self, request):
+        try:
+            Client.objects.get(token_id=request.dta['token_id']).delete()
+        except Client.DoesNotExist:
+            return Response({'Deleted:': 'false'})
+        
+        return Response({'Deleted': 'true'})
