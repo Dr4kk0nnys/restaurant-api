@@ -1,5 +1,6 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.validators import MinValueValidator
+from django.db.models import Q
 
 from rest_framework import viewsets
 from rest_framework.response import Response
@@ -27,7 +28,7 @@ class RestaurantViewset(viewsets.ViewSet):
 
     list: Return the account information being guided by the token id.
 
-    create: Creates a brand new account.
+    create: Creates a brand new account requiring all the information.
 
     update: Update all the info of a certain account being guided by the token id.
 
@@ -55,6 +56,7 @@ class RestaurantViewset(viewsets.ViewSet):
                 [3]: owner name
                 [4]: address
                 [5]: phone number
+                [6]: token id
             """
             for value in data.values():
                 info.append(value)
@@ -67,11 +69,12 @@ class RestaurantViewset(viewsets.ViewSet):
         pass
 
     def list(self, request):
-        (serializer, is_valid) = self.get_serializer_and_is_valid(request.data)
-        if not is_valid:
-            return Response({'Serializer not valid': 'true'})
-
-        return Response(Restaurant.objects.filter(token_id=serializer.data['token_id']).values())
+        try:
+            token_id = request.data['token_id']
+        except KeyError:
+            return Response({'Error trying to get the token_id': 'true'})
+        
+        return Response(Restaurant.objects.filter(token_id=token_id).values())
 
     def create(self, request):
         (serializer, is_valid) = self.get_serializer_and_is_valid(request.data)
@@ -83,11 +86,11 @@ class RestaurantViewset(viewsets.ViewSet):
         if not data:
             return Response({'Error occurred trying to get data': 'true'})
 
-        # The restaurant name already exists.
-        if Restaurant.objects.filter(restaurant_name=data[0]):
+        # The restaurant name already exists or the email is already being used.
+        if Restaurant.objects.filter(Q(restaurant_name=data[2]) | Q(email=data[0])):
             return Response({'Already Created': 'True'})
 
-        test = Restaurant.objects.get_or_create(
+        Restaurant.objects.get_or_create(
             email=data[0],
             password=generate_hash(data[1]),
             restaurant_name=data[2],
@@ -97,7 +100,7 @@ class RestaurantViewset(viewsets.ViewSet):
             token_id=generate_token(data[0], data[1])
         )
 
-        return Response(data)
+        return Response({'success': 'true', 'data': data, 'error': {}})
 
     def put(self, request):
         (serializer, is_valid) = self.get_serializer_and_is_valid(request.data)
@@ -127,7 +130,6 @@ class RestaurantViewset(viewsets.ViewSet):
         except KeyError:
             return Response({'Could not find the token id in the request body': 'true'})
 
-        # TODO: Validate the token id.
         try:
             Restaurant.objects.get(token_id=token_id).delete()
         except Restaurant.DoesNotExist:
