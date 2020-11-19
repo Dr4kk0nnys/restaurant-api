@@ -145,7 +145,9 @@ class ClientViewset(viewsets.ViewSet):
 
     create: Creates a new client with all the info.
 
+    update: Updates the client info being guide by the token id.
 
+    delete: Delete a client being guided by the token id.
     """
     def list(self, request):
         try:
